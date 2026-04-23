@@ -1,10 +1,10 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
-
   static const _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
-      keyCipherAlgorithm: KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
+      keyCipherAlgorithm:
+          KeyCipherAlgorithm.RSA_ECB_OAEPwithSHA_256andMGF1Padding,
       storageCipherAlgorithm: StorageCipherAlgorithm.AES_GCM_NoPadding,
     ),
     iOptions: IOSOptions(
@@ -12,19 +12,15 @@ class SecureStorageService {
     ),
   );
 
-
-  static const _keyToken = 'auth_token';
-
+  static const keyToken = 'auth_token';
 
   static Future<void> saveToken(String token) async =>
-      _storage.write(key: _keyToken, value: token);
-
+     _storage.write(key: keyToken, value: token);
 
   static Future<String?> getToken() async =>
-      _storage.read(key: _keyToken);
+   _storage.read(key: keyToken);
 
-
-  static Future<void> clearAll() async =>
-      _storage.deleteAll();
-
+  static Future<void> clearAll() async => 
+  _storage.deleteAll();
 }
+
