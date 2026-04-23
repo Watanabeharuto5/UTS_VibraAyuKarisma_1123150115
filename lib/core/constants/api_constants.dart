@@ -1,7 +1,6 @@
-class ApiConstants {
-  ApiConstants._(); // prevent instantiation
+import 'package:flutter/material.dart';
 
-  // ================= BASE =================
+class ApiConstants {
   static const String baseUrl = 'http://192.168.0.28:8080/v1';
 
   // ================= AUTH =================
@@ -11,6 +10,6 @@ class ApiConstants {
   static const String products = '/products';
 
   // ================= TIMEOUT =================
-  static const int connectTimeout = 15000; // ms
-  static const int receiveTimeout = 15000; // ms
+  static const int connectTimeout = 15000;
+  static const int receiveTimeout = 15000;
 }
