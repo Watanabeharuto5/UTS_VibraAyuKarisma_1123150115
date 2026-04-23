@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1091495700902",
+    "project_id": "postmanapi-3d151",
+    "storage_bucket": "postmanapi-3d151.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1091495700902:android:d682b5dacfafc5d5ba8767",
+        "android_client_info": {
+          "package_name": "com.example.koreanpop_album"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1091495700902-64k2svl7155r9gsfc597trh3n8p03eeo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpWcbZM9-M6zhpFksRKDvlRaGeIBAegfM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1091495700902-64k2svl7155r9gsfc597trh3n8p03eeo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
