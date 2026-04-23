@@ -8,7 +8,7 @@ import './features/auth/presentation/providers/auth_provider.dart';
 import './features/dashboard/presentation/providers/product_provider.dart';
 
 import './core/theme/app_theme.dart';
-import './core/service/secure_storage.dart';
+import 'core/services/secure_storage.dart';
 import './core/routes/app_router.dart';
 
 void main() async {

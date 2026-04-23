@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import '../constants/api_constants.dart';
-import '../service/secure_storage.dart';
+import 'secure_storage.dart';
 
 class DioClient {
 
