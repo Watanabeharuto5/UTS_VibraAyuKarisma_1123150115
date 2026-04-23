@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:email_validator/email_validator.dart';
-
 import '../providers/auth_provider.dart';
-import '../routes/app_router.dart';
+import '../../../../core/routes/app_router.dart';
+import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
-import '../widgets/auth_header.dart';
 import '../widgets/loading_overlay.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
-
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   final _pass2Ctrl = TextEditingController();
-
   bool _showPass = false;
 
   @override
@@ -39,7 +35,6 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_formKey.currentState!.validate()) return;
 
     final auth = context.read<AuthProvider>();
-
     final success = await auth.register(
       name: _nameCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
@@ -47,9 +42,8 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     if (!mounted) return;
-
     if (success) {
-      // Navigasi ke halaman verifikasi email
+      // Navigasi ke halaman instruksi verifikasi email
       Navigator.pushReplacementNamed(context, AppRouter.verifyEmail);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -78,16 +72,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: [
                   const SizedBox(height: 32),
 
-                  // Header
+                  // Widget reusable: AuthHeader
                   const AuthHeader(
                     icon: Icons.person_add_alt_1,
                     title: 'Buat Akun Baru',
                     subtitle: 'Lengkapi data diri Anda untuk mendaftar',
                   ),
-
                   const SizedBox(height: 32),
 
-                  // Nama
+                  // Widget reusable: CustomTextField
                   CustomTextField(
                     label: 'Nama Lengkap',
                     hint: 'Masukkan nama lengkap',
@@ -96,10 +89,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     validator: (v) =>
                         (v?.isEmpty ?? true) ? 'Nama wajib diisi' : null,
                   ),
-
                   const SizedBox(height: 16),
 
-                  // Email
                   CustomTextField(
                     label: 'Email',
                     hint: 'contoh@email.com',
@@ -114,10 +105,8 @@ class _RegisterPageState extends State<RegisterPage> {
                       return null;
                     },
                   ),
-
                   const SizedBox(height: 16),
 
-                  // Password
                   CustomTextField(
                     label: 'Password',
                     hint: 'Minimal 8 karakter',
@@ -128,19 +117,14 @@ class _RegisterPageState extends State<RegisterPage> {
                       icon: Icon(
                         _showPass ? Icons.visibility_off : Icons.visibility,
                       ),
-                      onPressed: () {
-                        setState(() => _showPass = !_showPass);
-                      },
+                      onPressed: () => setState(() => _showPass = !_showPass),
                     ),
-                    validator: (v) =>
-                        (v?.length ?? 0) < 8
-                            ? 'Password minimal 8 karakter'
-                            : null,
+                    validator: (v) => (v?.length ?? 0) < 8
+                        ? 'Password minimal 8 karakter'
+                        : null,
                   ),
-
                   const SizedBox(height: 16),
 
-                  // Konfirmasi Password
                   CustomTextField(
                     label: 'Konfirmasi Password',
                     hint: 'Ulangi password',
@@ -148,20 +132,16 @@ class _RegisterPageState extends State<RegisterPage> {
                     obscureText: !_showPass,
                     prefixIcon: const Icon(Icons.lock_outline),
                     validator: (v) =>
-                        v != _passCtrl.text
-                            ? 'Password tidak cocok'
-                            : null,
+                        v != _passCtrl.text ? 'Password tidak cocok' : null,
                   ),
-
                   const SizedBox(height: 28),
 
-                  // Button
+                  // Widget reusable: CustomButton
                   CustomButton(
                     label: 'Daftar Sekarang',
                     onPressed: _register,
                     isLoading: isLoading,
                   ),
-
                   const SizedBox(height: 16),
 
                   // Link ke Login
@@ -170,12 +150,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     children: [
                       const Text('Sudah punya akun? '),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            AppRouter.login,
-                          );
-                        },
+                        onTap: () => Navigator.pushReplacementNamed(
+                          context,
+                          AppRouter.login,
+                        ),
                         child: const Text(
                           'Masuk',
                           style: TextStyle(
