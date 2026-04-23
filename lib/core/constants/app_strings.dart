@@ -1,7 +1,10 @@
+import 'package:flutter/material.dart';
+
 class AppStrings {
 
   // ================= APP =================
   static const String appName = 'Pasar Malam';
+
 
 
   // ================= AUTH =================
@@ -18,6 +21,7 @@ class AppStrings {
   static const String resetPassword = 'Reset Password';
 
 
+
   // ================= MESSAGES =================
   static const String loginSuccess = 'Login berhasil';
   static const String registerSuccess = 'Pendaftaran berhasil';
@@ -27,10 +31,12 @@ class AppStrings {
   static const String emailVerificationResent = 'Email verifikasi sudah dikirim ulang';
 
 
+
   // ================= HINTS =================
   static const String emailHint = 'contoh@email.com';
   static const String passwordHint = 'Minimal 8 karakter';
   static const String nameHint = 'Masukkan nama lengkap';
+
 
 
   // ================= ERRORS =================
@@ -42,6 +48,7 @@ class AppStrings {
   static const String loginFailed = 'Login gagal';
   static const String registerFailed = 'Pendaftaran gagal';
   static const String networkError = 'Tidak ada koneksi internet';
+
 
 
   // ================= DASHBOARD =================
