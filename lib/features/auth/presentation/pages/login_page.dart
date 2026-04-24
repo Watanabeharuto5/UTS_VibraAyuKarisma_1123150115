@@ -119,8 +119,8 @@ class _LoginPageState extends State<LoginPage> {
 
                   const AuthHeader(
                     icon: Icons.lock_open_outlined,
-                    title: 'The Helmets',
-                    subtitle: 'Masuk untuk belanja helm terbaik',
+                    title: 'KPOP ALBUMS',
+                    subtitle: ' Masuk untuk melihat Album ',
                   ),
 
                   const SizedBox(height: 32),

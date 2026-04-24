@@ -12,13 +12,19 @@ import 'core/services/secure_storage.dart';
 import './core/routes/app_router.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  runApp(const MyApp());
+  try {
+    WidgetsFlutterBinding.ensureInitialized();
+    print("Inisialisasi Firebase...");
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Firebase Berhasil!");
+    runApp(const MyApp());
+  } catch (e) {
+    print("Firebase Error: $e");
+    // Tetap jalankan aplikasi biar nggak hitam, nanti errornya muncul di UI
+    runApp(const MyApp()); 
+  }
 }
 
 class MyApp extends StatelessWidget {
