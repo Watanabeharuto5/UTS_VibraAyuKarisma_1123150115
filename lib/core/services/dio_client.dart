@@ -1,27 +1,26 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
 import '../constants/api_constants.dart';
 import 'secure_storage.dart';
 
 class DioClient {
-
   static Dio? _instance;
 
   static Dio get instance {
-    _instance ??= _createDio(); // Singleton pattern
+    _instance ??= _createDio();
     return _instance!;
   }
-
 
   static Dio _createDio() {
     final dio = Dio(
       BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
-        connectTimeout: Duration(
-          milliseconds: ApiConstants.connectTimeout,
+        baseUrl: ApiConstant.baseUrl,
+        connectTimeout: const Duration(
+          milliseconds: ApiConstant.connectTimeout,
         ),
-        receiveTimeout: Duration(
-          milliseconds: ApiConstants.receiveTimeout,
+        receiveTimeout: const Duration(
+          milliseconds: ApiConstant.receiveTimeout,
         ),
         headers: {
           'Content-Type': 'application/json',
@@ -29,25 +28,34 @@ class DioClient {
       ),
     );
 
-
-    // ================= INTERCEPTOR: LOGGING =================
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          debugPrint('[REQUEST] ${options.method} ${options.path}');
+          final token =
+              await SecureStorageService.getToken();
+
+          if (token != null && token.isNotEmpty) {
+            options.headers["Authorization"] =
+                "Bearer $token";
+          }
+
+          debugPrint(
+              'Request: ${options.method} ${options.path}');
           handler.next(options);
         },
 
         onResponse: (response, handler) {
-          debugPrint('[RESPONSE] ${response.statusCode}');
+          debugPrint(
+              'Response: ${response.statusCode}');
           handler.next(response);
         },
 
         onError: (error, handler) async {
-          debugPrint('[ERROR] ${error.response?.statusCode}');
+          debugPrint(
+              'Error: ${error.response?.statusCode}');
 
           if (error.response?.statusCode == 401) {
-            await SecureStorageService.clearAll(); // Auto logout
+            await SecureStorageService.clearAll();
           }
 
           handler.next(error);
@@ -55,23 +63,6 @@ class DioClient {
       ),
     );
 
-
-    // ================= INTERCEPTOR: TOKEN =================
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await SecureStorageService.getToken();
-
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-
-          handler.next(options);
-        },
-      ),
-    );
-
     return dio;
   }
-
 }
