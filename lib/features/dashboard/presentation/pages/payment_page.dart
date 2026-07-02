@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/cart_provider.dart';
 import '../../../../core/routes/app_router.dart';
 
@@ -15,6 +16,8 @@ class _PaymentPageState extends State<PaymentPage> {
   String _selectedMethod = 'GoPay';
   bool _isProcessing = false;
   bool _isSuccess = false;
+  bool _waitingForCallback = false;
+  String _currentInvoice = '';
 
   final List<Map<String, dynamic>> _paymentMethods = [
     {
@@ -34,29 +37,70 @@ class _PaymentPageState extends State<PaymentPage> {
     },
   ];
 
+  String _formattedAmount(dynamic amount) {
+    final numVal = amount is num ? amount : 0.0;
+    return NumberFormat.currency(
+      locale: 'id',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(numVal);
+  }
+
+  Future<void> _launchDompetku(Map<String, dynamic>? txData) async {
+    if (txData == null) return;
+    final invoice = txData['invoice_number'] ?? '';
+    final total = (txData['total_price'] as num?)?.toDouble() ?? 0.0;
+    
+    final url = Uri.parse(
+      'dompetkampus://pay'
+      '?merchant_id=koreanpop_store'
+      '&merchant_name=KoreanPop%20Album%20Store'
+      '&amount=$total'
+      '&description=Pembayaran%20pesanan%20$invoice'
+      '&reference=$invoice'
+      '&callback=koreanpop://payment-callback'
+    );
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aplikasi Dompetku (Kantong Saya) tidak terinstall.'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error launching deep link: $e");
+    }
+  }
+
   Future<void> _processPayment() async {
     setState(() {
       _isProcessing = true;
     });
 
-    // Simulasi delay pembayaran 1.5 detik
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    // Panggil method checkout dari provider untuk mengosongkan keranjang di backend
-    final success = await context.read<CartProvider>().checkout(_selectedMethod);
+    final cart = context.read<CartProvider>();
+    final success = await cart.checkout(_selectedMethod);
 
     setState(() {
       _isProcessing = false;
     });
 
     if (success) {
+      final txData = cart.lastCheckoutData ?? {};
+      final invoice = txData['invoice_number'] ?? '';
+      
       setState(() {
-        _isSuccess = true;
+        _currentInvoice = invoice;
+        _waitingForCallback = true;
       });
+
+      await _launchDompetku(txData);
     } else {
-      final errorMsg = context.read<CartProvider>().error ?? 'Pembayaran gagal';
+      final errorMsg = cart.error ?? 'Pembayaran gagal';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(errorMsg),
@@ -69,6 +113,15 @@ class _PaymentPageState extends State<PaymentPage> {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+
+    if (_waitingForCallback && cart.lastPaidInvoice == _currentInvoice) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _isSuccess = true;
+          _waitingForCallback = false;
+        });
+      });
+    }
 
     if (_isSuccess) {
       return Scaffold(
@@ -136,6 +189,108 @@ class _PaymentPageState extends State<PaymentPage> {
                         fontWeight: FontWeight.w800,
                         fontSize: 15,
                       ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_waitingForCallback) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF111111),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1A1A1A),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFFC8B47A)),
+            onPressed: () {
+              setState(() {
+                _waitingForCallback = false;
+                _currentInvoice = '';
+              });
+            },
+          ),
+          title: const Text(
+            'Menunggu Pembayaran',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFE8D9B0),
+              letterSpacing: 1.0,
+            ),
+          ),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    color: Color(0xFFC8B47A),
+                    strokeWidth: 3,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                const Text(
+                  'Menunggu Pembayaran',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFE8D9B0),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Silakan lakukan pembayaran sebesar ${_formattedAmount(cart.lastCheckoutData?['total_price'])} untuk invoice $_currentInvoice di aplikasi Kantong Saya.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF888888),
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () => _launchDompetku(cart.lastCheckoutData),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFC8B47A),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text(
+                      'Buka Aplikasi Kantong Saya',
+                      style: TextStyle(
+                        color: Color(0xFF1A1A1A),
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _waitingForCallback = false;
+                      _currentInvoice = '';
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text(
+                    'Batalkan dan Kembali',
+                    style: TextStyle(
+                      color: Color(0xFFC8B47A),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

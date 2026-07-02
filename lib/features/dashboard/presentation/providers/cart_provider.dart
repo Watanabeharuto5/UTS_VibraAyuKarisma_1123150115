@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'dart:async';
+import 'package:app_links/app_links.dart';
 import '../../data/models/cart_model.dart';
 import '../../data/models/transaction_model.dart';
 import '../../../../core/services/dio_client.dart';
@@ -11,6 +13,92 @@ class CartProvider extends ChangeNotifier {
   CartStatus _status = CartStatus.initial;
   List<CartItemModel> _cartItems = [];
   String? _error;
+
+  final AppLinks _appLinks = AppLinks();
+  StreamSubscription<Uri>? _linkSubscription;
+
+  Map<String, dynamic>? _lastCheckoutData;
+  Map<String, dynamic>? get lastCheckoutData => _lastCheckoutData;
+
+  String? _lastPaidInvoice;
+  String? get lastPaidInvoice => _lastPaidInvoice;
+
+  void clearLastPaidInvoice() {
+    _lastPaidInvoice = null;
+  }
+
+  CartProvider() {
+    _initDeepLinkListener();
+  }
+
+  void _initDeepLinkListener() {
+    // Tangani cold start (app dijalankan dari kondisi mati via deep link)
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) {
+        _handleCallbackUri(uri);
+      }
+    });
+
+    // Tangani in-app stream (app sedang berjalan di background)
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleCallbackUri(uri);
+    }, onError: (err) {
+      debugPrint("Deep link error: $err");
+    });
+  }
+
+  Future<void> _handleCallbackUri(Uri uri) async {
+    debugPrint("DEEPLINK CALLBACK TERIMA: $uri");
+    if (uri.scheme == 'koreanpop' && uri.host == 'payment-callback') {
+      final status = uri.queryParameters['status'];
+      final reference = uri.queryParameters['reference'];
+
+      if (reference != null) {
+        if (status == 'success') {
+          // Konfirmasi pembayaran ke backend
+          try {
+            await DioClient.instance.post(
+              '/transactions/confirm',
+              data: {'invoice_number': reference},
+            );
+
+            // Kirim notifikasi local
+            await NotificationService.showNotification(
+              id: 888,
+              title: 'Pembayaran Berhasil!',
+              body: 'Transaksi dengan nomor $reference telah berhasil diselesaikan.',
+            );
+
+            _lastPaidInvoice = reference;
+            notifyListeners();
+
+            // Refresh riwayat transaksi
+            await fetchHistory();
+          } catch (e) {
+            debugPrint("Gagal konfirmasi transaksi via callback: $e");
+          }
+        } else if (status == 'cancelled') {
+          await NotificationService.showNotification(
+            id: 888,
+            title: 'Pembayaran Dibatalkan',
+            body: 'Transaksi dengan nomor $reference telah dibatalkan.',
+          );
+        } else {
+          await NotificationService.showNotification(
+            id: 888,
+            title: 'Pembayaran Gagal',
+            body: 'Transaksi dengan nomor $reference gagal diproses.',
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
 
   // Getters
   CartStatus get status => _status;
@@ -166,6 +254,7 @@ class CartProvider extends ChangeNotifier {
       );
 
       final txData = response.data['data'] ?? {};
+      _lastCheckoutData = txData;
       final invoiceNum = txData['invoice_number'] ?? 'TRX-${DateTime.now().millisecondsSinceEpoch}';
 
       _cartItems = [];
@@ -175,8 +264,8 @@ class CartProvider extends ChangeNotifier {
       // Kirim notifikasi local
       await NotificationService.showNotification(
         id: 999,
-        title: 'Pembayaran Berhasil!',
-        body: 'Pesanan dengan nomor $invoiceNum sedang diproses.',
+        title: 'Pesanan Dibuat',
+        body: 'Tagihan dengan nomor $invoiceNum berhasil dibuat. Menunggu pembayaran.',
       );
 
       return true;
