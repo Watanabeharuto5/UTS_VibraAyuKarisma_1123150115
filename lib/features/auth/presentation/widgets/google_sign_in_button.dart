@@ -37,10 +37,11 @@ class GoogleSignInButton extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo Google
-                  Image.asset(
-                    'assets/icons/google_logo.png',
-                    height: 22,
+                  // Logo Google diganti sementara dengan Icon agar tidak error
+                  const Icon(
+                    Icons.account_circle_outlined, // Icon standar pengganti logo
+                    color: Colors.blue, 
+                    size: 22,
                   ),
                   const SizedBox(width: 12),
                   const Text(

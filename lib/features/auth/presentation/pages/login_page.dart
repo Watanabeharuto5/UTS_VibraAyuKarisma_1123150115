@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 
 import '../providers/auth_provider.dart';
 import '../../../../core/routes/app_router.dart';
-import '../widgets/auth_header.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/loading_overlay.dart';
@@ -34,13 +32,11 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _loginEmail() async {
     if (!_formKey.currentState!.validate()) return;
-
     final auth = context.read<AuthProvider>();
     final ok = await auth.loginWithEmail(
       email: _emailCtrl.text.trim(),
       password: _passCtrl.text,
     );
-
     if (!mounted) return;
     _handleLoginResult(ok, auth);
   }
@@ -61,42 +57,10 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(auth.errorMessage ?? 'Login gagal'),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFFC0392B),
         ),
       );
     }
-  }
-
-  void _showForgotPasswordDialog(BuildContext context) {
-    final ctrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Reset Password'),
-        content: CustomTextField(
-          label: 'Email',
-          hint: 'Email terdaftar',
-          controller: ctrl,
-          keyboardType: TextInputType.emailAddress,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await FirebaseAuth.instance.sendPasswordResetEmail(
-                email: ctrl.text.trim(),
-              );
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('Kirim'),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -105,135 +69,125 @@ class _LoginPageState extends State<LoginPage> {
 
     return LoadingOverlay(
       isLoading: isLoading,
-      message: 'Masuk ke akun...',
+      message: 'Processing...',
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-
-                  const AuthHeader(
-                    icon: Icons.lock_open_outlined,
-                    title: 'KPOP ALBUMS',
-                    subtitle: ' Masuk untuk melihat Album ',
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 12,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        CustomTextField(
-                          label: 'Email',
-                          hint: 'contoh@email.com',
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          validator: (v) {
-                            if (v?.isEmpty ?? true) return 'Email wajib diisi';
-                            if (!EmailValidator.validate(v!)) {
-                              return 'Format email salah';
-                            }
-                            return null;
-                          },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        CustomTextField(
-                          label: 'Password',
-                          hint: 'Masukkan password',
-                          controller: _passCtrl,
-                          obscureText: !_showPass,
-                          prefixIcon: const Icon(Icons.lock_outline),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _showPass
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                            ),
-                            onPressed: () =>
-                                setState(() => _showPass = !_showPass),
-                          ),
-                          validator: (v) =>
-                              (v?.isEmpty ?? true) ? 'Password wajib diisi' : null,
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: TextButton(
-                            onPressed: () =>
-                                _showForgotPasswordDialog(context),
-                            child: const Text('Lupa Password?'),
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        CustomButton(
-                          label: 'Masuk',
-                          onPressed: _loginEmail,
-                          isLoading: isLoading,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  const DividerWithText(text: 'atau masuk dengan'),
-
-                  const SizedBox(height: 20),
-
-                  GoogleSignInButton(
-                    onPressed: _loginGoogle,
-                    isLoading: isLoading,
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+        backgroundColor: const Color(0xFF111111),
+        body: Stack(
+          children: [
+            const Positioned(
+              top: 60, left: 24,
+              child: Text('✦', style: TextStyle(color: Color(0xFFC8B47A), fontSize: 26)),
+            ),
+            const Positioned(
+              bottom: 40, right: 24,
+              child: Text('✦', style: TextStyle(color: Color(0xFFC8B47A), fontSize: 20)),
+            ),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
                     children: [
-                      const Text('Belum punya akun? '),
-                      GestureDetector(
-                        onTap: () => Navigator.pushReplacementNamed(
-                          context,
-                          AppRouter.register,
+                      const SizedBox(height: 32),
+                      const Text('✦',
+                        style: TextStyle(color: Color(0xFFC8B47A), fontSize: 22, letterSpacing: 4)),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'KPOP\nALBUMS',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFE8D9B0),
+                          letterSpacing: 5,
+                          height: 1.15,
                         ),
-                        child: const Text(
-                          'Daftar',
-                          style: TextStyle(
-                            color: Color(0xFF1565C0),
-                            fontWeight: FontWeight.bold,
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Enter to discover the albums',
+                        style: TextStyle(
+                          color: Color(0xFF888888),
+                          fontSize: 12,
+                          letterSpacing: 1.5,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                      CustomTextField(
+                        label: '',
+                        hint: 'Email',
+                        controller: _emailCtrl,
+                        keyboardType: TextInputType.emailAddress,
+                        prefixIcon: const Icon(Icons.alternate_email, color: Color(0xFF666666)),
+                      ),
+                      const SizedBox(height: 14),
+                      CustomTextField(
+                        label: '',
+                        hint: 'Password',
+                        controller: _passCtrl,
+                        obscureText: !_showPass,
+                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF666666)),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _showPass ? Icons.visibility_off : Icons.visibility,
+                            color: const Color(0xFF666666),
+                            size: 18,
+                          ),
+                          onPressed: () => setState(() => _showPass = !_showPass),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'Forgot Password?',
+                            style: TextStyle(color: Color(0xFF888888), fontSize: 11.5),
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      CustomButton(
+                        label: 'JOIN THE FANDOM',
+                        onPressed: _loginEmail,
+                        isLoading: isLoading,
+                      ),
+                      const SizedBox(height: 24),
+                      const DividerWithText(text: 'or sign in with'),
+                      const SizedBox(height: 20),
+                      GoogleSignInButton(
+                        onPressed: _loginGoogle,
+                        isLoading: isLoading,
+                      ),
+                      const SizedBox(height: 36),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            'New Fan? Register Here ',
+                            style: TextStyle(color: Color(0xFF555555), fontSize: 11.5),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pushReplacementNamed(context, AppRouter.register),
+                            child: const Text(
+                              'Daftar',
+                              style: TextStyle(
+                                color: Color(0xFFC8B47A),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

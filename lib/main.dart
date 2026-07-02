@@ -12,19 +12,27 @@ import 'core/services/secure_storage.dart';
 import './core/routes/app_router.dart';
 
 void main() async {
+  // 1. Pastikan binding inisialisasi duluan
+  WidgetsFlutterBinding.ensureInitialized();
+
   try {
-    WidgetsFlutterBinding.ensureInitialized();
     print("Inisialisasi Firebase...");
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    
+    // 2. Cegah error [core/duplicate-app] dengan cek apakah sudah ada app yang aktif
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
+    
     print("Firebase Berhasil!");
-    runApp(const MyApp());
   } catch (e) {
-    print("Firebase Error: $e");
-    // Tetap jalankan aplikasi biar nggak hitam, nanti errornya muncul di UI
-    runApp(const MyApp()); 
+    // Mencetak error jika ada masalah lain saat inisialisasi
+    print("Firebase Note: $e");
   }
+
+  // 3. Jalankan aplikasi
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -48,7 +56,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// Splash Page
+// Splash Page - Pintu masuk aplikasi
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -64,12 +72,15 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _checkAuth() async {
+    // Delay 2 detik biar loadingnya kelihatan
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
+    // Cek token dari Secure Storage (untuk auto-login)
     final token = await SecureStorageService.getToken();
 
+    // Jika token ada, masuk ke dashboard. Jika tidak, ke login.
     final route = token != null
         ? AppRouter.dashboard
         : AppRouter.login;
@@ -80,7 +91,11 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
+      // Background putih biar gak item layarnya
+      backgroundColor: Colors.white, 
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
