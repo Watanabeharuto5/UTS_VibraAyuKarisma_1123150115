@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import '../../data/models/cart_model.dart';
+import '../../data/models/transaction_model.dart';
 import '../../../../core/services/dio_client.dart';
 
 enum CartStatus { initial, loading, loaded, error }
@@ -135,13 +136,16 @@ class CartProvider extends ChangeNotifier {
   }
 
   // Proses checkout keranjang
-  Future<bool> checkout() async {
+  Future<bool> checkout(String paymentMethod) async {
     _status = CartStatus.loading;
     _error = null;
     notifyListeners();
 
     try {
-      await DioClient.instance.post('/cart/checkout');
+      await DioClient.instance.post(
+        '/cart/checkout',
+        data: {'payment_method': paymentMethod},
+      );
       _cartItems = [];
       _status = CartStatus.loaded;
       notifyListeners();
@@ -157,5 +161,31 @@ class CartProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  List<TransactionModel> _history = [];
+  List<TransactionModel> get history => _history;
+
+  // Ambil riwayat transaksi dari backend
+  Future<void> fetchHistory() async {
+    _status = CartStatus.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await DioClient.instance.get('/transactions');
+      final List data = response.data['data'] ?? [];
+
+      _history = data.map((e) => TransactionModel.fromJson(e)).toList();
+      _status = CartStatus.loaded;
+    } on DioException catch (e) {
+      _error = e.response?.data['message'] ?? 'Gagal mengambil riwayat transaksi';
+      _status = CartStatus.error;
+    } catch (e) {
+      _error = 'Terjadi kesalahan saat mengambil riwayat';
+      _status = CartStatus.error;
+    }
+
+    notifyListeners();
   }
 }

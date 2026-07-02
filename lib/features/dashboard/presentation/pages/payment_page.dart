@@ -45,7 +45,7 @@ class _PaymentPageState extends State<PaymentPage> {
     if (!mounted) return;
 
     // Panggil method checkout dari provider untuk mengosongkan keranjang di backend
-    final success = await context.read<CartProvider>().checkout();
+    final success = await context.read<CartProvider>().checkout(_selectedMethod);
 
     setState(() {
       _isProcessing = false;
