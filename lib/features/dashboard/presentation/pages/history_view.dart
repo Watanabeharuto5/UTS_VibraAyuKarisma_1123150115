@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/cart_provider.dart';
 
 class HistoryView extends StatefulWidget {
@@ -17,6 +18,42 @@ class _HistoryViewState extends State<HistoryView> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<CartProvider>().fetchHistory();
     });
+  }
+
+  Future<void> _launchDompetku(String invoice, double total) async {
+    final url = Uri.parse(
+      'dompetkampus://pay'
+      '?merchant_id=koreanpop_store'
+      '&merchant_name=KoreanPop%20Album%20Store'
+      '&amount=$total'
+      '&description=Pembayaran%20pesanan%20$invoice'
+      '&reference=$invoice'
+      '&callback=koreanpop://payment-callback'
+    );
+
+    try {
+      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Aplikasi Dompetku (Kantong Saya) gagal dibuka.'),
+              backgroundColor: Colors.orangeAccent,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error launching deep link: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aplikasi Dompetku (Kantong Saya) tidak terinstall.'),
+            backgroundColor: Colors.orangeAccent,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -242,6 +279,30 @@ class _HistoryViewState extends State<HistoryView> {
                         ),
                       ],
                     ),
+                    if (trx.status.toLowerCase() == 'pending') ...[
+                      const SizedBox(height: 14),
+                      const Divider(color: Color(0xFF222222), height: 1),
+                      const SizedBox(height: 10),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 38,
+                        child: ElevatedButton(
+                          onPressed: () => _launchDompetku(trx.invoiceNumber, trx.totalPrice),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFC8B47A),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text(
+                            'Bayar Sekarang',
+                            style: TextStyle(
+                              color: Color(0xFF1A1A1A),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               );
