@@ -175,7 +175,7 @@ class CartProvider extends ChangeNotifier {
       // Kirim notifikasi local
       await NotificationService.showNotification(
         id: 999,
-        title: 'Pembayaran Berhasil! 🎉',
+        title: 'Pembayaran Berhasil!',
         body: 'Pesanan dengan nomor $invoiceNum sedang diproses.',
       );
 
