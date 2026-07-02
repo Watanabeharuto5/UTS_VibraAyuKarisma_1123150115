@@ -78,12 +78,32 @@ class CartProvider extends ChangeNotifier {
             debugPrint("Gagal konfirmasi transaksi via callback: $e");
           }
         } else if (status == 'cancelled') {
+          try {
+            await DioClient.instance.post(
+              '/transactions/cancel',
+              data: {'invoice_number': reference},
+            );
+            await fetchHistory();
+          } catch (e) {
+            debugPrint("Gagal membatalkan transaksi di backend: $e");
+          }
+
           await NotificationService.showNotification(
             id: 888,
             title: 'Pembayaran Dibatalkan',
             body: 'Transaksi dengan nomor $reference telah dibatalkan.',
           );
         } else {
+          try {
+            await DioClient.instance.post(
+              '/transactions/cancel',
+              data: {'invoice_number': reference},
+            );
+            await fetchHistory();
+          } catch (e) {
+            debugPrint("Gagal membatalkan transaksi gagal di backend: $e");
+          }
+
           await NotificationService.showNotification(
             id: 888,
             title: 'Pembayaran Gagal',
