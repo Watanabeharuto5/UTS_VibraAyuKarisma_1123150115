@@ -5,6 +5,7 @@ import '../../features/auth/presentation/pages/register_page.dart';
 import '../../features/auth/presentation/pages/verify_email_page.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/dashboard/presentation/pages/cart_page.dart';
+import '../../features/dashboard/presentation/pages/payment_page.dart';
 import '../guards/authguard.dart';
 
 class AppRouter {
@@ -14,6 +15,7 @@ class AppRouter {
   static const String verifyEmail = '/verify-email';
   static const String dashboard   = '/dashboard';
   static const String cart        = '/cart';
+  static const String payment     = '/payment';
 
 
   static Map<String, WidgetBuilder> get routes => {
@@ -23,5 +25,6 @@ class AppRouter {
     verifyEmail: (_) => const VerifyEmailPage(),
     dashboard:   (_) => const AuthGuard(child: DashboardPage()),
     cart:        (_) => const AuthGuard(child: CartPage()),
+    payment:     (_) => const AuthGuard(child: PaymentPage()),
   };
 }

@@ -133,4 +133,29 @@ class CartProvider extends ChangeNotifier {
       return false;
     }
   }
+
+  // Proses checkout keranjang
+  Future<bool> checkout() async {
+    _status = CartStatus.loading;
+    _error = null;
+    notifyListeners();
+
+    try {
+      await DioClient.instance.post('/cart/checkout');
+      _cartItems = [];
+      _status = CartStatus.loaded;
+      notifyListeners();
+      return true;
+    } on DioException catch (e) {
+      _error = e.response?.data['message'] ?? 'Gagal melakukan checkout';
+      _status = CartStatus.error;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'Terjadi kesalahan saat memproses checkout';
+      _status = CartStatus.error;
+      notifyListeners();
+      return false;
+    }
+  }
 }

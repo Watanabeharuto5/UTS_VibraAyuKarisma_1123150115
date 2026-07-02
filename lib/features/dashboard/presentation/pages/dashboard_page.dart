@@ -6,7 +6,9 @@ import '../providers/cart_provider.dart';
 import '../../../../core/routes/app_router.dart';
 import '../../../../core/guards/authguard.dart';
 import 'cart_page.dart';
-import 'package:intl/intl.dart';
+import 'home_view.dart';
+import 'history_view.dart';
+import 'profile_view.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -16,6 +18,20 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = const [
+    HomeView(),
+    HistoryView(),
+    ProfileView(),
+  ];
+
+  final List<String> _titles = const [
+    'Collection',
+    'Riwayat Transaksi',
+    'Profil Saya',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -28,7 +44,6 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
-    final product = context.watch<ProductProvider>();
     final cart = context.watch<CartProvider>();
 
     return Scaffold(
@@ -43,276 +58,131 @@ class _DashboardPageState extends State<DashboardPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Collection',
-              style: TextStyle(
+            Text(
+              _titles[_currentIndex],
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFFE8D9B0),
                 letterSpacing: 2,
               ),
             ),
-            Text(
-              'Annyeong!, ${auth.firebaseUser?.displayName ?? 'User'}!',
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w300,
-                color: Color(0xFF888888),
-                letterSpacing: 0.5,
+            if (_currentIndex == 0) // Sub-title Annyeong hanya tampil di Beranda
+              Text(
+                'Annyeong, ${auth.firebaseUser?.displayName ?? 'User'}!',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w300,
+                  color: Color(0xFF888888),
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
           ],
         ),
         actions: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.shopping_cart_outlined, color: Color(0xFFC8B47A), size: 20),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation, secondaryAnimation) =>
-                          const AuthGuard(child: CartPage()),
-                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                      },
-                      transitionDuration: const Duration(milliseconds: 300),
-                    ),
-                  );
-                },
-              ),
-              if (cart.totalQuantity > 0)
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      '${cart.totalQuantity}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
+          if (_currentIndex == 0) // Hanya tampilkan keranjang di tab Beranda
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.shopping_cart_outlined, color: Color(0xFFC8B47A), size: 20),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const AuthGuard(child: CartPage()),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          return FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          );
+                        },
+                        transitionDuration: const Duration(milliseconds: 300),
                       ),
-                      textAlign: TextAlign.center,
+                    );
+                  },
+                ),
+                if (cart.totalQuantity > 0)
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '${cart.totalQuantity}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-            ],
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: Color(0xFFC8B47A), size: 20),
-            onPressed: () async {
-              await auth.logout();
-              if (!mounted) return;
-              Navigator.pushReplacementNamed(context, AppRouter.login);
-            },
-          ),
+              ],
+            ),
+          const SizedBox(width: 8),
         ],
       ),
+      
+      // Menggunakan AnimatedSwitcher agar transisi antar tab sangat mulus (fade)
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: Container(
+          key: ValueKey<int>(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
+      ),
 
-      body: switch (product.status) {
-        // ── LOADING ──────────────────────────────────────
-        ProductStatus.loading || ProductStatus.initial => const Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              CircularProgressIndicator(color: Color(0xFFC8B47A)),
-              SizedBox(height: 16),
-              Text(
-                'Memuat produk...',
-                style: TextStyle(color: Color(0xFF888888), fontSize: 13),
-              ),
-            ],
+      // Premium Gold-Themed Bottom Navigation Bar
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A1A),
+          border: Border(
+            top: BorderSide(color: const Color(0xFFC8B47A).withOpacity(0.2), width: 0.5),
           ),
         ),
-
-        // ── ERROR ─────────────────────────────────────────
-        ProductStatus.error => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 64, color: Color(0xFFC8B47A)),
-              const SizedBox(height: 16),
-              Text(
-                product.error ?? 'Terjadi kesalahan',
-                style: const TextStyle(color: Color(0xFF888888)),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.refresh, color: Color(0xFF1A1A1A)),
-                label: const Text(
-                  'Coba Lagi',
-                  style: TextStyle(color: Color(0xFF1A1A1A), fontWeight: FontWeight.w700),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFC8B47A),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () => product.fetchProducts(),
-              ),
-            ],
-          ),
-        ),
-
-        // ── LOADED ────────────────────────────────────────
-        ProductStatus.loaded => RefreshIndicator(
-          color: const Color(0xFFC8B47A),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
           backgroundColor: const Color(0xFF1A1A1A),
-          onRefresh: () => product.fetchProducts(),
-          child: GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              childAspectRatio: 0.62,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
+          selectedItemColor: const Color(0xFFC8B47A),
+          unselectedItemColor: const Color(0xFF666666),
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, letterSpacing: 0.5),
+          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w400, fontSize: 11, letterSpacing: 0.5),
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Beranda',
             ),
-            itemCount: product.products.length,
-            itemBuilder: (context, i) {
-              final p = product.products[i];
-              return Container(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFC8B47A).withOpacity(0.2),
-                    width: 0.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Gambar produk
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                      child: Image.network(
-                        p.imageUrl,
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 120,
-                          color: const Color(0xFF222222),
-                          child: const Icon(
-                            Icons.image_not_supported,
-                            size: 40,
-                            color: Color(0xFF444444),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            p.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: Color(0xFFE8D9B0),
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            NumberFormat.currency(
-                              locale: 'id',
-                              symbol: 'Rp ',
-                              decimalDigits: 2,
-                            ).format(p.price),
-                            style: const TextStyle(
-                              color: Color(0xFFC8B47A),
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFC8B47A).withOpacity(0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: const Color(0xFFC8B47A).withOpacity(0.3),
-                                    width: 0.5,
-                                  ),
-                                ),
-                                child: Text(
-                                  p.category,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Color(0xFFC8B47A),
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                              Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(20),
-                                  onTap: () async {
-                                    final success = await context.read<CartProvider>().addToCart(p.id, 1);
-                                    if (success && mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text('${p.name} ditambahkan ke keranjang'),
-                                          backgroundColor: const Color(0xFFC8B47A),
-                                          duration: const Duration(seconds: 1),
-                                        ),
-                                      );
-                                    }
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(5),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFC8B47A).withOpacity(0.12),
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: const Color(0xFFC8B47A).withOpacity(0.3),
-                                        width: 0.5,
-                                      ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.add_shopping_cart,
-                                      color: Color(0xFFC8B47A),
-                                      size: 15,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.history_outlined),
+              activeIcon: Icon(Icons.history),
+              label: 'Riwayat',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'Profil',
+            ),
+          ],
         ),
-      },
+      ),
     );
   }
 }

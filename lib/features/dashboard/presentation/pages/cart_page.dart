@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/cart_provider.dart';
+import '../../../../core/routes/app_router.dart';
+import '../../../../core/guards/authguard.dart';
+import 'payment_page.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -254,10 +257,18 @@ class _CartPageState extends State<CartPage> {
                           height: 50,
                           child: ElevatedButton(
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Checkout Berhasil! Terima kasih.'),
-                                  backgroundColor: Color(0xFFC8B47A),
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (context, animation, secondaryAnimation) =>
+                                      const AuthGuard(child: PaymentPage()),
+                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    );
+                                  },
+                                  transitionDuration: const Duration(milliseconds: 300),
                                 ),
                               );
                             },
