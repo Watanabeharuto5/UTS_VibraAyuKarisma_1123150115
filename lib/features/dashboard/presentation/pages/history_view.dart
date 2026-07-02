@@ -103,21 +103,45 @@ class _HistoryViewState extends State<HistoryView> {
                             letterSpacing: 0.5,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.green.withOpacity(0.4), width: 0.5),
-                          ),
-                          child: Text(
-                            trx.status,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.greenAccent,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                        Builder(
+                          builder: (context) {
+                            final statusLower = trx.status.toLowerCase();
+                            final isPending = statusLower == 'pending' || statusLower == 'belum bayar';
+                            final isCancelled = statusLower == 'batal' || statusLower == 'cancelled';
+                            
+                            final color = isPending
+                                ? Colors.orangeAccent
+                                : isCancelled
+                                    ? Colors.redAccent
+                                    : Colors.greenAccent;
+                            final bgColor = isPending
+                                ? Colors.orange.withOpacity(0.12)
+                                : isCancelled
+                                    ? Colors.red.withOpacity(0.12)
+                                    : Colors.green.withOpacity(0.12);
+                            final borderColor = isPending
+                                ? Colors.orange.withOpacity(0.4)
+                                : isCancelled
+                                    ? Colors.red.withOpacity(0.4)
+                                    : Colors.green.withOpacity(0.4);
+
+                            return Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: bgColor,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: borderColor, width: 0.5),
+                              ),
+                              child: Text(
+                                trx.status,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: color,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

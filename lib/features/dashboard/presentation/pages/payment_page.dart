@@ -13,13 +13,18 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  String _selectedMethod = 'GoPay';
+  String _selectedMethod = 'Kantong Saya';
   bool _isProcessing = false;
   bool _isSuccess = false;
   bool _waitingForCallback = false;
   String _currentInvoice = '';
 
   final List<Map<String, dynamic>> _paymentMethods = [
+    {
+      'name': 'Kantong Saya',
+      'icon': Icons.wallet,
+      'instructions': '1. Klik Bayar Sekarang\n2. Anda akan diarahkan ke aplikasi Kantong Saya secara otomatis\n3. Lakukan pembayaran di aplikasi Kantong Saya.',
+    },
     {
       'name': 'GoPay',
       'icon': Icons.account_balance_wallet_outlined,
@@ -62,18 +67,23 @@ class _PaymentPageState extends State<PaymentPage> {
     );
 
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      } else {
+      final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (!launched) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Aplikasi Dompetku (Kantong Saya) tidak terinstall.'),
+            content: Text('Aplikasi Dompetku (Kantong Saya) gagal dibuka.'),
             backgroundColor: Colors.orangeAccent,
           ),
         );
       }
     } catch (e) {
       debugPrint("Error launching deep link: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aplikasi Dompetku (Kantong Saya) tidak terinstall.'),
+          backgroundColor: Colors.orangeAccent,
+        ),
+      );
     }
   }
 
