@@ -6,6 +6,7 @@ import 'firebase_options.dart';
 
 import './features/auth/presentation/providers/auth_provider.dart';
 import './features/dashboard/presentation/providers/product_provider.dart';
+import './features/dashboard/presentation/providers/cart_provider.dart';
 
 import './core/theme/app_theme.dart';
 import 'core/services/secure_storage.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MaterialApp(
         title: 'My App',

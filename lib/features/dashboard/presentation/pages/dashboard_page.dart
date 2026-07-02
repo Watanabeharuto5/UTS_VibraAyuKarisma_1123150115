@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/product_provider.dart';
+import '../providers/cart_provider.dart';
 import '../../../../core/routes/app_router.dart';
 import 'package:intl/intl.dart';
 
@@ -18,6 +19,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ProductProvider>().fetchProducts();
+      context.read<CartProvider>().fetchCart();
     });
   }
 
@@ -25,6 +27,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     final product = context.watch<ProductProvider>();
+    final cart = context.watch<CartProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xFF111111),
@@ -59,6 +62,42 @@ class _DashboardPageState extends State<DashboardPage> {
           ],
         ),
         actions: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.shopping_cart_outlined, color: Color(0xFFC8B47A), size: 20),
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRouter.cart);
+                },
+              ),
+              if (cart.totalQuantity > 0)
+                Positioned(
+                  right: 4,
+                  top: 4,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      '${cart.totalQuantity}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.logout, color: Color(0xFFC8B47A), size: 20),
             onPressed: () async {
@@ -123,7 +162,7 @@ class _DashboardPageState extends State<DashboardPage> {
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              childAspectRatio: 0.7,
+              childAspectRatio: 0.62,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
             ),
@@ -191,24 +230,63 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFC8B47A).withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: const Color(0xFFC8B47A).withOpacity(0.3),
-                                width: 0.5,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFC8B47A).withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: const Color(0xFFC8B47A).withOpacity(0.3),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                child: Text(
+                                  p.category,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Color(0xFFC8B47A),
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              p.category,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Color(0xFFC8B47A),
-                                letterSpacing: 0.5,
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(20),
+                                  onTap: () async {
+                                    final success = await context.read<CartProvider>().addToCart(p.id, 1);
+                                    if (success && mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text('${p.name} ditambahkan ke keranjang'),
+                                          backgroundColor: const Color(0xFFC8B47A),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFC8B47A).withOpacity(0.12),
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFFC8B47A).withOpacity(0.3),
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                    child: const Icon(
+                                      Icons.add_shopping_cart,
+                                      color: Color(0xFFC8B47A),
+                                      size: 15,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
