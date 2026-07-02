@@ -4,6 +4,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../../../../core/routes/app_router.dart';
+import '../../../../core/guards/authguard.dart';
+import 'cart_page.dart';
 import 'package:intl/intl.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -68,7 +70,20 @@ class _DashboardPageState extends State<DashboardPage> {
               IconButton(
                 icon: const Icon(Icons.shopping_cart_outlined, color: Color(0xFFC8B47A), size: 20),
                 onPressed: () {
-                  Navigator.pushNamed(context, AppRouter.cart);
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation, secondaryAnimation) =>
+                          const AuthGuard(child: CartPage()),
+                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        );
+                      },
+                      transitionDuration: const Duration(milliseconds: 300),
+                    ),
+                  );
                 },
               ),
               if (cart.totalQuantity > 0)
