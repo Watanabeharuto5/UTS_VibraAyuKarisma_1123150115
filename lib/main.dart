@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import './features/auth/presentation/providers/auth_provider.dart';
 import './features/dashboard/presentation/providers/product_provider.dart';
 import './features/dashboard/presentation/providers/cart_provider.dart';
+import './core/services/notification_service.dart';
 
 import './core/theme/app_theme.dart';
 import 'core/services/secure_storage.dart';
@@ -30,6 +31,13 @@ void main() async {
   } catch (e) {
     // Mencetak error jika ada masalah lain saat inisialisasi
     print("Firebase Note: $e");
+  }
+
+  // Inisialisasi local notification (akan meminta izin notifikasi di awal)
+  try {
+    await NotificationService.init();
+  } catch (e) {
+    print("Notification Init Note: $e");
   }
 
   // 3. Jalankan aplikasi

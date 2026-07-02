@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../data/models/cart_model.dart';
 import '../../data/models/transaction_model.dart';
 import '../../../../core/services/dio_client.dart';
+import '../../../../core/services/notification_service.dart';
 
 enum CartStatus { initial, loading, loaded, error }
 
@@ -72,6 +73,23 @@ class CartProvider extends ChangeNotifier {
 
       // Refresh keranjang setelah menambah
       await fetchCart();
+
+      // Kirim notifikasi local
+      try {
+        final addedItem = _cartItems.firstWhere((item) => item.productId == productId);
+        await NotificationService.showNotification(
+          id: productId,
+          title: 'Berhasil Masuk Keranjang 🛒',
+          body: '${addedItem.product.name} (x$quantity) telah ditambahkan.',
+        );
+      } catch (_) {
+        await NotificationService.showNotification(
+          id: productId,
+          title: 'Berhasil Masuk Keranjang 🛒',
+          body: 'Produk berhasil ditambahkan ke keranjang belanja.',
+        );
+      }
+
       return true;
     } on DioException catch (e) {
       _error = e.response?.data['message'] ?? 'Gagal menambahkan produk ke keranjang';
@@ -142,13 +160,25 @@ class CartProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await DioClient.instance.post(
+      final response = await DioClient.instance.post(
         '/cart/checkout',
         data: {'payment_method': paymentMethod},
       );
+
+      final txData = response.data['data'] ?? {};
+      final invoiceNum = txData['invoice_number'] ?? 'TRX-${DateTime.now().millisecondsSinceEpoch}';
+
       _cartItems = [];
       _status = CartStatus.loaded;
       notifyListeners();
+
+      // Kirim notifikasi local
+      await NotificationService.showNotification(
+        id: 999,
+        title: 'Pembayaran Berhasil! 🎉',
+        body: 'Pesanan dengan nomor $invoiceNum sedang diproses.',
+      );
+
       return true;
     } on DioException catch (e) {
       _error = e.response?.data['message'] ?? 'Gagal melakukan checkout';
