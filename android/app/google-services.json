@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "1091495700902-af6itcvnuh7p1dm6nctr4980go5o643i.apps.googleusercontent.com",
+          "client_id": "1091495700902-p9bei0nkeg52hbgv29bchhfep9k0o0s0.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.koreanpop_album",
-            "certificate_hash": "e8a12338486aae70fb798f2cc2f43577fb3d2886"
+            "certificate_hash": "662c3663588851ddbe4ec4d33ce4bee09e659c6d"
           }
         },
         {
