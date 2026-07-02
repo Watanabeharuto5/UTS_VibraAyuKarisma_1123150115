@@ -29,6 +29,33 @@ class AuthProvider extends ChangeNotifier {
   String? _tempEmail;
   String? _tempPassword;
 
+  AuthProvider() {
+    _initializeAuth();
+  }
+
+  Future<void> _initializeAuth() async {
+    // 1. Ambil token dari Secure Storage
+    final token = await SecureStorageService.getToken();
+
+    // 2. Monitor status autentikasi Firebase secara real-time
+    _auth.authStateChanges().listen((User? user) async {
+      if (token != null && user != null) {
+        if (!user.emailVerified) {
+          _status = AuthStatus.emailNotVerified;
+        } else {
+          _status = AuthStatus.authenticated;
+        }
+        _firebaseUser = user;
+        _backendToken = token;
+      } else {
+        _firebaseUser = null;
+        _backendToken = null;
+        _status = AuthStatus.unauthenticated;
+      }
+      notifyListeners();
+    });
+  }
+
   // ─── Getters ─────────────────────────────────────────────
   AuthStatus get status => _status;
   User? get firebaseUser => _firebaseUser;
